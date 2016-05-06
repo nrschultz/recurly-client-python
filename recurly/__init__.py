@@ -922,7 +922,19 @@ class Usage(Resource):
         'updated_at',
     )
 
+class MeasuredUnit(Resource):
 
+    """A unit of measurement for usage based billing"""
+
+    nodename = 'measured_unit'
+    member_path = 'measured_units/%s'
+
+    attributes = (
+        'id',
+        'name',
+        'display_name',
+        'description',
+    )
 
 class AddOn(Resource):
 
