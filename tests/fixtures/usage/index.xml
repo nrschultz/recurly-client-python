@@ -7,6 +7,9 @@ User-Agent: {user-agent}
 
 HTTP/1.1 200 OK
 Content-Type: application/xml; charset=utf-8
+X-Records: 1
+Link: <https://api.recurly.com/v2/subscriptions/123456789012345678901234567890ab/add_ons/marketing_emails/usage?cursor=1304956; rel="next">
+Content-Type: application/xml; charset=utf-8
 
 <?xml version="1.0" encoding="UTF-8"?>
 <usages type="array">

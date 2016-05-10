@@ -985,10 +985,12 @@ class TestResources(RecurlyTest):
 
             with self.mock_request('usage/index.xml'):
                 usages = marketing_emails_add_on.usage()
+
                 self.assertEquals(type(usages), recurly.resource.Page)
+                self.assertEquals(len(usages), 1)
 
                 for usage in usages:
-                    self.assertEquals(usage, Usage)
+                    self.assertEquals(type(usage), Usage)
 
     def test_subscribe_add_on(self):
         plan = Plan(
