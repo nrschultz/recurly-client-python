@@ -977,14 +977,19 @@ class TestResources(RecurlyTest):
             sub = Subscription.get('123456789012345678901234567890ab')
 
             # find the add on with the marketing_emails code
-            add_on_filter = lambda a: a.add_on_code == 'marketing_emails'
-            marketing_emails_add_on = filter(add_on_filter, sub.subscription_add_ons)[0]
+            def marketing_emails_add_on(sub):
+                for add_on in sub.subscription_add_ons:
+                    if add_on.add_on_code == 'marketing_emails':
+                        return add_on
+                return None
+
+            add_on = marketing_emails_add_on(sub)
 
             with self.mock_request('usage/created.xml'):
-                sub.create_usage(marketing_emails_add_on, usage)
+                sub.create_usage(add_on, usage)
 
             with self.mock_request('usage/index.xml'):
-                usages = marketing_emails_add_on.usage()
+                usages = add_on.usage()
 
                 self.assertEquals(type(usages), recurly.resource.Page)
                 self.assertEquals(len(usages), 1)
