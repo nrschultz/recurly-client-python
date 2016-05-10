@@ -11,7 +11,7 @@ from six.moves import urllib, http_client
 from six.moves.urllib.parse import urljoin
 
 
-from recurly import Account, AddOn, Adjustment, BillingInfo, Coupon, Plan, Redemption, Subscription, SubscriptionAddOn, Transaction
+from recurly import Account, AddOn, Adjustment, BillingInfo, Coupon, Plan, Redemption, Subscription, SubscriptionAddOn, Transaction, MeasuredUnit, Usage
 from recurly import Money, NotFoundError, ValidationError, BadRequestError, PageError
 from recurlytests import RecurlyTest, xml
 
@@ -170,8 +170,14 @@ class TestResources(RecurlyTest):
             plan.save()
 
         try:
-
-            add_on = AddOn(add_on_code=add_on_code, name='Mock Add-On')
+            # a usage based add on
+            add_on = AddOn(
+                add_on_code=add_on_code,
+                name='Mock Add-On',
+                add_on_type="usage",
+                usage_type="price",
+                measured_unit_id=123456,
+            )
             exc = None
             with self.mock_request('add-on/need-amount.xml'):
                 try:
@@ -183,7 +189,8 @@ class TestResources(RecurlyTest):
             error = exc.errors['add_on.unit_amount_in_cents']
             self.assertEqual(error.symbol, 'blank')
 
-            add_on = AddOn(add_on_code=add_on_code, name='Mock Add-On', unit_amount_in_cents=Money(40))
+            add_on.unit_amount_in_cents = Money(40)
+
             with self.mock_request('add-on/created.xml'):
                 plan.create_add_on(add_on)
             self.assertEqual(add_on.add_on_code, add_on_code)
@@ -948,6 +955,30 @@ class TestResources(RecurlyTest):
 
             with self.mock_request('subscription/redemptions.xml'):
                 self.assertEqual(type(sub.redemptions()), recurly.resource.Page)
+
+    def test_measured_unit(self):
+        with self.mock_request('measured-units/exists.xml'):
+            measured_unit = MeasuredUnit.get(123456)
+            self.assertEqual(measured_unit.name, 'marketing_email')
+            self.assertEqual(measured_unit.display_name, 'Marketing Email')
+            self.assertEqual(measured_unit.description, 'Unit of Marketing Email')
+            self.assertEqual(measured_unit.id, 123456)
+
+    def test_usage(self):
+        import datetime
+
+        sub_add_on = SubscriptionAddOn(add_on_code='marketing_emails')
+
+        usage = Usage()
+        usage.amount = 100 # record 100 emails
+        usage.merchant_tag = "Recording 100 emails used by customer"
+        usage.recording_timestamp = datetime.datetime(2016, 12, 12, 12, 0, 0, 0)
+        usage.usage_timestamp = datetime.datetime(2016, 12, 12, 12, 0, 0, 0)
+
+        with self.mock_request('subscription/show.xml'):
+            sub = Subscription.get('123456789012345678901234567890ab')
+            with self.mock_request('usage/created.xml'):
+                sub.create_usage(sub_add_on, usage)
 
     def test_subscribe_add_on(self):
         plan = Plan(

@@ -955,6 +955,7 @@ class AddOn(Resource):
         'usage_type',
         'add_on_type',
         'tax_code',
+        'optional'
         'created_at',
     )
 
