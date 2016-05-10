@@ -967,8 +967,6 @@ class TestResources(RecurlyTest):
     def test_usage(self):
         import datetime
 
-        sub_add_on = SubscriptionAddOn(add_on_code='marketing_emails')
-
         usage = Usage()
         usage.amount = 100 # record 100 emails
         usage.merchant_tag = "Recording 100 emails used by customer"
@@ -977,8 +975,20 @@ class TestResources(RecurlyTest):
 
         with self.mock_request('subscription/show.xml'):
             sub = Subscription.get('123456789012345678901234567890ab')
+
+            # find the add on with the marketing_emails code
+            add_on_filter = lambda a: a.add_on_code == 'marketing_emails'
+            marketing_emails_add_on = filter(add_on_filter, sub.subscription_add_ons)[0]
+
             with self.mock_request('usage/created.xml'):
-                sub.create_usage(sub_add_on, usage)
+                sub.create_usage(marketing_emails_add_on, usage)
+
+            with self.mock_request('usage/index.xml'):
+                usages = marketing_emails_add_on.usage()
+                self.assertEquals(type(usages), recurly.resource.Page)
+
+                for usage in usages:
+                    self.assertEquals(usage, Usage)
 
     def test_subscribe_add_on(self):
         plan = Plan(
