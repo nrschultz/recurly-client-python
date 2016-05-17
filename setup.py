@@ -18,7 +18,7 @@ except ImportError:
     more_install_requires.append('ssl')
 
 setup(
-    name='recurly',
+    name='gc-recurly',
     version=VERSION,
     description="The official Recurly API client",
     long_description=DESCRIPTION,
